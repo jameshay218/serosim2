@@ -1,0 +1,13 @@
+Package: serosim2
+Title: Infection time and antibody dynamics model
+Version: 1.0.0
+Author: James
+Maintainer: James <jameshay218@gmail.com>
+Description: Set of functions implementing an infection time and antibody kinetics model. Enables infection times and antibody dynamics to be inferred using serological data.
+License: GPL-3
+LazyData: true
+URL: https://github.com/jameshay218/serosim2
+BugReports: https://github.com/jameshay218/serosim2/issues
+RoxygenNote: 5.0.1
+Suggests: 
+    testthat
