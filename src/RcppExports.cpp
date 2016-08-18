@@ -5,6 +5,141 @@
 
 using namespace Rcpp;
 
+// vector_sort
+NumericVector vector_sort(NumericVector x);
+RcppExport SEXP serosim2_vector_sort(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    __result = Rcpp::wrap(vector_sort(x));
+    return __result;
+END_RCPP
+}
+// vector_order
+IntegerVector vector_order(NumericVector x);
+RcppExport SEXP serosim2_vector_order(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    __result = Rcpp::wrap(vector_order(x));
+    return __result;
+END_RCPP
+}
+// individual_sim
+NumericVector individual_sim(NumericVector mu_pars, NumericVector tp_pars, NumericVector m_pars, NumericVector ti_pars, double y0b, double lower_titre_bound, NumericVector times);
+RcppExport SEXP serosim2_individual_sim(SEXP mu_parsSEXP, SEXP tp_parsSEXP, SEXP m_parsSEXP, SEXP ti_parsSEXP, SEXP y0bSEXP, SEXP lower_titre_boundSEXP, SEXP timesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type mu_pars(mu_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tp_pars(tp_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type m_pars(m_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
+    Rcpp::traits::input_parameter< double >::type y0b(y0bSEXP);
+    Rcpp::traits::input_parameter< double >::type lower_titre_bound(lower_titre_boundSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type times(timesSEXP);
+    __result = Rcpp::wrap(individual_sim(mu_pars, tp_pars, m_pars, ti_pars, y0b, lower_titre_bound, times));
+    return __result;
+END_RCPP
+}
+// multiple_sim
+NumericMatrix multiple_sim(NumericVector ti_pars, NumericVector y0s, NumericMatrix mu_pars, NumericMatrix tp_pars, NumericMatrix m_pars, NumericVector times);
+RcppExport SEXP serosim2_multiple_sim(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP mu_parsSEXP, SEXP tp_parsSEXP, SEXP m_parsSEXP, SEXP timesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mu_pars(mu_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tp_pars(tp_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m_pars(m_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type times(timesSEXP);
+    __result = Rcpp::wrap(multiple_sim(ti_pars, y0s, mu_pars, tp_pars, m_pars, times));
+    return __result;
+END_RCPP
+}
+// obs_error
+double obs_error(int actual, int obs, double S, double EA);
+RcppExport SEXP serosim2_obs_error(SEXP actualSEXP, SEXP obsSEXP, SEXP SSEXP, SEXP EASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type actual(actualSEXP);
+    Rcpp::traits::input_parameter< int >::type obs(obsSEXP);
+    Rcpp::traits::input_parameter< double >::type S(SSEXP);
+    Rcpp::traits::input_parameter< double >::type EA(EASEXP);
+    __result = Rcpp::wrap(obs_error(actual, obs, S, EA));
+    return __result;
+END_RCPP
+}
+// posterior_1
+double posterior_1(NumericVector ti_pars, NumericVector y0s, double mu, NumericMatrix cr_pars, NumericMatrix tp_pars, NumericMatrix m_pars, NumericMatrix data, NumericVector error_pars, double mu_pop, double mu_pop_sigma);
+RcppExport SEXP serosim2_posterior_1(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP muSEXP, SEXP cr_parsSEXP, SEXP tp_parsSEXP, SEXP m_parsSEXP, SEXP dataSEXP, SEXP error_parsSEXP, SEXP mu_popSEXP, SEXP mu_pop_sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type cr_pars(cr_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tp_pars(tp_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m_pars(m_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type error_pars(error_parsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop(mu_popSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop_sigma(mu_pop_sigmaSEXP);
+    __result = Rcpp::wrap(posterior_1(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, error_pars, mu_pop, mu_pop_sigma));
+    return __result;
+END_RCPP
+}
+// posterior_2
+double posterior_2(NumericVector ti_pars, NumericVector y0s, double mu, NumericMatrix cr_pars, NumericMatrix tp_pars, NumericMatrix m_pars, NumericMatrix data, double pop_sigma, double mu_pop, double mu_pop_sigma, NumericVector cr_pop, NumericVector cr_sigmas);
+RcppExport SEXP serosim2_posterior_2(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP muSEXP, SEXP cr_parsSEXP, SEXP tp_parsSEXP, SEXP m_parsSEXP, SEXP dataSEXP, SEXP pop_sigmaSEXP, SEXP mu_popSEXP, SEXP mu_pop_sigmaSEXP, SEXP cr_popSEXP, SEXP cr_sigmasSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type cr_pars(cr_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tp_pars(tp_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m_pars(m_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< double >::type pop_sigma(pop_sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop(mu_popSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop_sigma(mu_pop_sigmaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cr_pop(cr_popSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cr_sigmas(cr_sigmasSEXP);
+    __result = Rcpp::wrap(posterior_2(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, pop_sigma, mu_pop, mu_pop_sigma, cr_pop, cr_sigmas));
+    return __result;
+END_RCPP
+}
+// posterior_3
+double posterior_3(NumericVector ti_pars, NumericVector y0s, double mu, NumericMatrix cr_pars, NumericMatrix tp_pars, NumericMatrix m_pars, NumericMatrix data, double pop_sigma, double mu_pop, double mu_pop_sigma, NumericVector cr_pop, NumericVector m_pop, NumericVector cr_sigmas, NumericVector m_sigmas);
+RcppExport SEXP serosim2_posterior_3(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP muSEXP, SEXP cr_parsSEXP, SEXP tp_parsSEXP, SEXP m_parsSEXP, SEXP dataSEXP, SEXP pop_sigmaSEXP, SEXP mu_popSEXP, SEXP mu_pop_sigmaSEXP, SEXP cr_popSEXP, SEXP m_popSEXP, SEXP cr_sigmasSEXP, SEXP m_sigmasSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type cr_pars(cr_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tp_pars(tp_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m_pars(m_parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< double >::type pop_sigma(pop_sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop(mu_popSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_pop_sigma(mu_pop_sigmaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cr_pop(cr_popSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type m_pop(m_popSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cr_sigmas(cr_sigmasSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type m_sigmas(m_sigmasSEXP);
+    __result = Rcpp::wrap(posterior_3(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, pop_sigma, mu_pop, mu_pop_sigma, cr_pop, m_pop, cr_sigmas, m_sigmas));
+    return __result;
+END_RCPP
+}
 // toUnitScale
 double toUnitScale(double x, double min, double max);
 RcppExport SEXP serosim2_toUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {

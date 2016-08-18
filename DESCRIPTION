@@ -13,4 +13,5 @@ Suggests:
     testthat
 LinkingTo:
 	Rcpp
-
+Imports:
+	Rcpp
