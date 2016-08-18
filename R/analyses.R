@@ -175,7 +175,7 @@ generate_measures <- function(counts){
 }
 
 #' @export
-simulate_and_save <- function(n, sample_start, tmax, samples, strains, crs, tp, m, infection_propns, infection_ranges, mu, mu_sigma, error_pars,filename="test",addNoise=FALSE){
+simulate_and_save <- function(n, sample_start, tmax, samples, strains, crs, tp, m, infection_propns, infection_ranges, mu, mu_sigma, error_pars,filename="test",addNoise=FALSE, useY0s=FALSE){
     
     startTime <- sample_start
     endTime <- tmax
@@ -202,13 +202,14 @@ simulate_and_save <- function(n, sample_start, tmax, samples, strains, crs, tp, 
     m <- matrix(rep(m,nstrains^2),nrow=nstrains,ncol=nstrains)
 
     processParams <- list("mu"=mu,"mu_sigma"=mu_sigma,"tp"=tp,"cr"=cr,"m"=m)
-
+    
     y0s <- matrix(0,ncol=3,nrow=n)
+    
     samplingTimes <- matrix(0,ncol=samples,nrow=n)
     for(i in 1:nrow(samplingTimes)){
         samplingTimes[i,] <- sort(sample(seq(startTime,endTime,by=1),samples))
     }
-
+    
     y <- overall_simulation(
         individuals = n,
         strains = strains,
