@@ -6,7 +6,9 @@ run_metropolis_MCMC <- function(all_data,
                               pop_fixed,
                               ind_fixed,
                               all_pop_pars,
-                              all_ind_pars){
+                              all_ind_pars,
+                              findY0s=FALSE,
+                              oddLikelihood=FALSE){
     iterations <- mcmcPars["iterations"]
     tuning <- mcmcPars["tuning"]
     popt <- mcmcPars["popt"]
@@ -65,7 +67,7 @@ run_metropolis_MCMC <- function(all_data,
     ############################################################################
 
     
-    likelihood_ind <- make_likelihood(NULL,NULL, all_pop_pars, all_data[[1]],times)
+    likelihood_ind <- make_likelihood(NULL,NULL, all_pop_pars, all_data[[1]],times, oddLikelihood)
     
     ############################################################################
     ## Each individual needs to be monitored
@@ -74,6 +76,7 @@ run_metropolis_MCMC <- function(all_data,
 
     ## Empty matrices to save MCMC steps for each individual
     ind_pars <- c("mu_i"=8,"ti1"=100,"ti2"=100,"ti3"=100)
+    if(findY0s) ind_pars <- c(ind_pars, "y0_1"=0,"y0_2"=0,"y0_3"=0)
     chain_colnames <- c("sampno",names(ind_pars),"lnlike")
 
     ind_step <- 1 # initial MCMC step size
@@ -102,8 +105,15 @@ run_metropolis_MCMC <- function(all_data,
         ##startPars[which(ind_fixed==0)] <- runif(length(startPars[which(ind_fixed==0)]),1,15)
         startPars[1] <- runif(1,1,12)
         startPars[2:4] <- runif(3,1,tmax)
+        tmpPars <- startPars
         
-        covMat <- diag(0.1*startPars^2)
+        tmp_y0s <- all_ind_pars[[i]]$y0s
+        if(findY0s){
+            tmp_y0s <- rpois(3,0.1)
+            tmpPars <- c(tmpPars, 0.1,0.1,0.1)
+        }
+        
+        covMat <- diag(0.1*tmpPars^2)
         tmp_y0s <- all_ind_pars[[i]]$y0s
 
         ## Calculate starting likelihood
@@ -113,7 +123,7 @@ run_metropolis_MCMC <- function(all_data,
         
         ## Save starting parameters and likelihood
         tmp_table <- as.data.frame(array(dim=c(1,length(chain_colnames))))
-        tmp_table[1,] <- c(0,as.numeric(startPars),ini_lik)
+        tmp_table[1,] <- c(0,as.numeric(tmpPars),ini_lik)
         colnames(tmp_table) <- chain_colnames
         write.table(tmp_table,file=mcmc_chain_file,row.names=FALSE,col.names=TRUE,sep=",",append=FALSE)
 
@@ -124,7 +134,6 @@ run_metropolis_MCMC <- function(all_data,
     }
     print("Individual parameters set up")
     ############################################################################
-
 
     ############################################################################
     #### Initial likelihood for pop parameters
@@ -173,19 +182,27 @@ run_metropolis_MCMC <- function(all_data,
             chain_i <- ALL_INDIVIDUALS_CONTROL[[j]]$chain_i
             opt_i <- ALL_INDIVIDUALS_CONTROL[[j]]$opt_i
             ALL_INDIVIDUALS_CONTROL[[j]]$iter <- ALL_INDIVIDUALS_CONTROL[[j]]$iter + 1
-            
+
+        
             ######################################################
             ## MULTIVARIATE NORMAL PROPOSAL
             ######################################################
-            proposal <- mvr_proposal(ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$cov,ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,ind_fixed)
-
+            #proposal <- mvr_proposal(ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$cov,ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,ind_fixed)
+            if(findY0s){
+                tmp <- mvr_proposal(ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$cov,ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,ind_fixed, ALL_INDIVIDUALS_CONTROL[[j]]$y0s)
+                proposal <- tmp[["proposed"]]
+                prop_y0s <- tmp[["y0s"]]
+            } else {
+                proposal <- mvr_proposal(ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$cov,ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,ind_fixed, NULL)
+                prop_y0s <- ALL_INDIVIDUALS_CONTROL[[j]]$y0s
+            }
             ######################################################
             ## Check that proposals are within allowable range
-            if(ind_prior(proposal,tmax) > -0.5){
+            if(ind_prior(proposal,tmax,prop_y0s) > -0.5){
                 ######################################################
                 ## LIKELIHOOD CALCULATION FOR THIS INDIVIDUAL
                 ######################################################
-                lnlike <- proposed_ind_liks[j] <- likelihood_ind(proposal, ALL_INDIVIDUALS_CONTROL[[j]]$y0s, POP_PARAMETER_CONTROL$pars,all_data[[j]])
+                lnlike <- proposed_ind_liks[j] <- likelihood_ind(proposal, prop_y0s, POP_PARAMETER_CONTROL$pars,all_data[[j]])
                 log_prob <- min(lnlike - ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik,0)
                 ######################################################
 
@@ -193,6 +210,7 @@ run_metropolis_MCMC <- function(all_data,
                 ## Check for acceptance. If better, or if worse and proportional to how worse accept the move
                 if(log(runif(1)) < log_prob){
                     ALL_INDIVIDUALS_CONTROL[[j]]$pars <- proposal
+                    if(findY0s) ALL_INDIVIDUALS_CONTROL[[j]]$y0s <- prop_y0s
                     ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik <- ind_liks[j] <- lnlike  ## Record new likelihood
                     ALL_INDIVIDUALS_CONTROL[[j]]$accepted <- ALL_INDIVIDUALS_CONTROL[[j]]$accepted + 1
                 }
@@ -209,7 +227,9 @@ run_metropolis_MCMC <- function(all_data,
             ##################################################
             ## If within adaptive period, record chain more regularly for adaptation
             if(i < (adaptive_period+burnin) && i > burnin){
-                ALL_INDIVIDUALS_CONTROL[[j]]$opt_chain[opt_i,] <- c(i,ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
+                toSave <- ALL_INDIVIDUALS_CONTROL[[j]]$pars
+                if(findY0s) toSave <- c(toSave, ALL_INDIVIDUALS_CONTROL[[j]]$y0s)
+                ALL_INDIVIDUALS_CONTROL[[j]]$opt_chain[opt_i,] <- c(i,toSave, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
                 ALL_INDIVIDUALS_CONTROL[[j]]$opt_i <- ALL_INDIVIDUALS_CONTROL[[j]]$opt_i + 1
                 
                 ## If this is an optimisation step, scale the step size and update the covariance matrix
@@ -230,7 +250,9 @@ run_metropolis_MCMC <- function(all_data,
             ## If this iteration is meant to be recorded, save it to the MCMC chain
             ######################################################
             if(i %% thin == 0){
-                ALL_INDIVIDUALS_CONTROL[[j]]$save_chain[chain_i,] <- c(i,ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
+                toSave <- ALL_INDIVIDUALS_CONTROL[[j]]$pars
+                if(findY0s) toSave <- c(toSave, ALL_INDIVIDUALS_CONTROL[[j]]$y0s)
+                ALL_INDIVIDUALS_CONTROL[[j]]$save_chain[chain_i,] <- c(i,toSave, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
                 ALL_INDIVIDUALS_CONTROL[[j]]$chain_i <- ALL_INDIVIDUALS_CONTROL[[j]]$chain_i + 1
                 ## If enough rows have been recorded, write these to csv and reset records
                 if(ALL_INDIVIDUALS_CONTROL[[j]]$chain_i > save_block){

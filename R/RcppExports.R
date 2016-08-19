@@ -33,6 +33,10 @@ posterior_3 <- function(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, pop_si
     .Call('serosim2_posterior_3', PACKAGE = 'serosim2', ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, pop_sigma, mu_pop, mu_pop_sigma, cr_pop, m_pop, cr_sigmas, m_sigmas)
 }
 
+posterior_4 <- function(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, error_pars, mu_pop, mu_pop_sigma) {
+    .Call('serosim2_posterior_4', PACKAGE = 'serosim2', ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, error_pars, mu_pop, mu_pop_sigma)
+}
+
 #' Converts to unit scale
 #'
 #' @param x the double to be converted

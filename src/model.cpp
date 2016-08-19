@@ -195,6 +195,8 @@ double posterior_1(
   return(lik);
 }
 
+
+
 // Version 2 - mixed effects CR
 //[[Rcpp::export]]
 double posterior_2(
@@ -313,5 +315,71 @@ double posterior_3(
   lik += R::dnorm(m_pars(0,2),m_pop[2],m_sigmas[2],true);
   lik += R::dnorm(m_pars(1,2),m_pop[3],m_sigmas[3],true);
 
+  return(lik);
+}
+
+
+// Version 1 - only mu is mixed effects, rest is fixed
+//[[Rcpp::export]]
+double posterior_4(
+			   NumericVector ti_pars, 
+			   NumericVector y0s, 
+			   double mu,
+			   NumericMatrix cr_pars, 
+			   NumericMatrix tp_pars, 
+			   NumericMatrix m_pars, 
+			   NumericMatrix data,
+			   NumericVector error_pars,
+			   double mu_pop,
+			   double mu_pop_sigma
+		 ){
+  double pop_sigma, S, EA;
+  pop_sigma = error_pars[0];
+  S = error_pars[1];
+  EA = error_pars[2];
+
+  double lower_bound = 0;
+  double y0;
+  double lik = 0;
+  NumericMatrix y(data.nrow(), ti_pars.size()+1);
+  y(_,0) = data(_,0);
+  NumericVector new_ti = clone(ti_pars);
+
+  IntegerVector indices(ti_pars.size());
+  NumericVector mus(ti_pars.size());
+  NumericVector tps(ti_pars.size());
+  NumericVector ms(ti_pars.size());
+
+  new_ti = vector_sort(ti_pars);
+  indices = vector_order(ti_pars) - 1;
+
+  y0s = y0s[indices];
+
+  for(int i = 0; i < ti_pars.size(); ++i){
+    mus = cr_pars(i,_)*mu;
+    mus = mus[indices];
+    tps = tp_pars(i,_);
+    tps = tps[indices];
+    ms = m_pars(i,_);
+    ms = ms[indices];
+    y0 = y0s[i];
+    y(_,i+1) = individual_sim(mus,tps,ms, new_ti,y0, lower_bound,data(_,0));
+    
+    /* ================================
+       HERE TO CHANGE ERROR FUNCTION
+       ================================ */
+    for(int j = 0; j < y.nrow();++j){
+      lik += log(obs_error(data(j,i+1),floor(y(j,i+1)),S,EA));
+      //lik += R::dnorm(data(j,i+1),y(j,i+1),pop_sigma,true);
+    }
+  }
+
+  // ALL MIXED EFFECTS
+  lik += R::dnorm(mu, mu_pop,mu_pop_sigma,true);
+  
+  for(int i = 0; i < (y.ncol()-1);++i){
+    lik += log(obs_error(data(0,i+1),floor(y0s[i]),S,EA));
+  }
+  
   return(lik);
 }

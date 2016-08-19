@@ -483,21 +483,13 @@ generateIncCurve <- function(t, startPops, params){
 #' inc_vectors[[1]] <- generate_toy_inc(0.4,900,200,600)
 #' inc_vectors[[2]] <- generate_toy_inc(0.1,900,500,750)
 #'  
-#' fluscape_simulation(fluscape_dat, 100, c("H3N2.2008","CKH9N2.2008"), mu_pars, tp_pars, m_pars, TRUE, inc_vectors, TRUE, TRUE, FALSE, TRUE, c(0.8,0.1))
-fluscape_simulation <- function(
+#' dat <- fluscape_data_manipulation(fluscape_data,fluscape_strains,TRUE,FALSE,TRUE)
+fluscape_data_manipulation<- function(
     fluscape_data,
-    n = NULL,
     fluscape_strains,
-    mu_pars,
-    tp_pars,
-    m_pars,
-    STOCHASTIC=TRUE,
-    incidenceVectors,
     removeOutliers=TRUE,
     fluscapeT0=TRUE,
-    addNoise=TRUE,
-    plotSerology=FALSE,
-    noiseParams=c(0.79,0.2,8)
+    plotSerology=FALSE
     ){
 
     v1_strains <- NULL
@@ -516,15 +508,6 @@ fluscape_simulation <- function(
     #' Omit NA
     dat <- na.omit(dat)
 
-    #' Starting titres
-    if(fluscapeT0){
-        y0s <- dat[,v1_strains]
-    }
-    else{
-        y0s <- matrix(nrow=n, ncol=length(v1_strains))
-        y0s[is.na(y0s)] <- 0
-    }
-    
     dat[,"PART_SAMPLE_TIME.V1"] <- as.integer(as.Date(dat[,"PART_SAMPLE_TIME.V1"]))
     dat[,"PART_SAMPLE_TIME.V2"] <- as.integer(as.Date(dat[,"PART_SAMPLE_TIME.V2"]))
     
@@ -538,39 +521,48 @@ fluscape_simulation <- function(
     dat[,"PART_SAMPLE_TIME.V2"] <-  dat[,"PART_SAMPLE_TIME.V2"] -start
     end <- max(dat[,c("PART_SAMPLE_TIME.V1", "PART_SAMPLE_TIME.V2")])
     start <- 0
+    
 
-    if(!n){
-        n <- nrow(dat)
+    tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.H3N2.2007.V1","PART_SAMPLE_TIME.V2","HI.H3N2.2007.V2")]
+    tmpDat[,2] <- log(tmpDat[,2]/5,2)
+    tmpDat[,4] <- log(tmpDat[,4]/5,2)
+
+    p1 <- plot_serology(tmpDat ,"H3N2.2007",plotSerology)
+
+
+    tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.CKH9N2.2008.V1","PART_SAMPLE_TIME.V2","HI.CKH9N2.2008.V2")]
+    tmpDat[,2] <- log(tmpDat[,2]/5,2)
+    tmpDat[,4] <- log(tmpDat[,4]/5,2)
+
+    p2 <- plot_serology(tmpDat ,"H9N2.2008",plotSerology)
+
+
+    tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.H1N1.2009.PDM.V1","PART_SAMPLE_TIME.V2","HI.H1N1.2009.PDM.V2")]
+    tmpDat[,2] <- log(tmpDat[,2]/5,2)
+    tmpDat[,4] <- log(tmpDat[,4]/5,2)
+
+    p3 <- plot_serology(tmpDat ,"H1N1.2009",plotSerology)
+    colnames(dat) <- c("t1",v1_strains,"t2",v2_strains)
+
+    for(i in c(2:4,6:8)){
+        dat[dat[,i]==0,i] <- 5
+        dat[,i] <- log(dat[,i]/5,2)
     }
-    if(n > nrow(dat)){
-        print("Error - specified sample size greater than number of individuals")
-        return(-1)
+    
+    return(dat)
+}
+    
+#' @export
+generate_starting_ind_pars <- function(data,pop_pars,tmax,fluscapeY0=FALSE){
+    all_pars <- NULL
+    mu <- pop_pars["mu_mu"]
+    mu_sigma <- pop_pars["mu_sigma"]
+    
+    for(i in 1:length(data)){
+        all_pars[[i]] <- list()
+        all_pars[[i]]$pars <- c("mu_i"=rnorm(1,mu,mu_sigma),"tis"=as.integer(runif(3,0,tmax)))
+        all_pars[[i]]$y0s <- rep(0,3)        
+        if(fluscapeY0) all_pars[[i]]$y0s <- data[[i]][1,2:4]
     }
-
-    samples <- sample(nrow(dat),n,replace=FALSE)
-    samples <- sort(samples)
-    dat <- dat[samples,]
-
-    
-    y0s <- dat[,v1_strains]
-    y0s[y0s==0] <- 5
-    y0s <- log(y0s/5,2)
-    y0s <- unname(as.matrix(y0s))
-    
-    measurement_times <- dat[,c("PART_SAMPLE_TIME.V1","PART_SAMPLE_TIME.V2")]
-    measurement_times <- unname(as.matrix(measurement_times))
-
-    final <- overall_simulation(n, v1_strains, incidenceVectors, measurement_times, list(mu_pars,tp_pars,m_pars,STOCHASTIC), y0s, start, end, c(FALSE,addNoise), noiseParams, FALSE, TRUE, multiple_strains, add_noise)[["list_dat"]]
-    
-    if(plotSerology){
-          for(i in 1:length(v1_strains)){
-              plot_serology(dat[,c("PART_SAMPLE_TIME.V1",v1_strains[i],"PART_SAMPLE_TIME.V2",v2_strains[i])],fluscape_strains[i])
-        }
-        for(i in 1:length(v1_strains)){
-            name <- paste(v1_strains[i]," sim",sep="")
-            plot_serology(final[,c(1,i+1,length(v1_strains)+2,i + length(v1_strains)+2)],name)
-        }
-    }
-    return(final)
-    
+    return(all_pars)
 }
