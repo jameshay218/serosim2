@@ -91,9 +91,9 @@ straight_to_results <- function(chain_names, all_ind_pars, all_data, burnin,thre
 #' Make sure you're in the working directory with all of the chains
 #' @export
 calculate_statistics <- function(chain_names, all_ind_pars, all_data, burnin,threshold=0.5){
-    #'###########################
-    #'# ANALYSIS
-    #'###########################
+    ############################
+    ## ANALYSIS
+    ############################
     allResults <- NULL
     
     ## Go through each individual

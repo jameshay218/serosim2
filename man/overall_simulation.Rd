@@ -31,6 +31,8 @@ overall_simulation(individuals = 100, strains = c("H3N2", "H5N1", "H1N1"),
 
 \item{discreteData}{if TRUE, takes the floor of all generated data. Defaults to TRUE.}
 
+\item{PROCESS_FUNCTION}{a pointer to the data generating process, taking the processParams as an argument. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains}} for an example.}
+
 \item{NOISE_FUNCTION}{pointer to a noise adding function. Should take the value to be manipulated and a vector of function specific parameters (noiseParams). See \code{\link{add_noise}} for an example.}
 
 \item{MIXED_EFFECTS}{bool to indicate whether or not mixed effects should be used}

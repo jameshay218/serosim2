@@ -139,7 +139,7 @@ error_checks <- function(a,b,c,d){
 #' @param noiseParams generic vector of parameters to pass to the noise generating function. Defaults to match \code{\link{add_noise}}
 #' @param logTitre if TRUE, returns log transformed titre values. (5*2^y). This might be specific to HAI titre data, so might be best left to default as FALSE.
 #' @param discreteData if TRUE, takes the floor of all generated data. Defaults to TRUE.
-#' @param PROCESS_FUNCTION a pointer to the data generating process, taking the processParams as an argument. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains} for an example.
+#' @param PROCESS_FUNCTION a pointer to the data generating process, taking the processParams as an argument. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains}} for an example.
 #' @param NOISE_FUNCTION pointer to a noise adding function. Should take the value to be manipulated and a vector of function specific parameters (noiseParams). See \code{\link{add_noise}} for an example.
 #' @param MIXED_EFFECTS bool to indicate whether or not mixed effects should be used
 #' @return a dataframe of the simulated serosurvey.
@@ -343,7 +343,7 @@ convert_data_list_to_table <- function(all_data, all_ind_pars, strainNames=c("A"
 #' @param processParams a generic vector of parameters to be passed to the data generating function.
 #' @param times a vector of times to return values from the simulation
 #' @param strain_names a vector of strain names for data labels
-#' @param PROCESS_FUNCTION pointer to a function to calculate the data at the given time points. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains} for an example (and default).
+#' @param PROCESS_FUNCTION pointer to a function to calculate the data at the given time points. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains}} for an example (and default).
 #' @return a data frame with time series readings for each of the given strains
 #' @seealso \code{\link{overall_simulation}}
 #' @export
@@ -462,7 +462,7 @@ generateIncCurve <- function(t, startPops, params){
 #' @param fluscapeT0 boolean value indicating whether or not the V1 titres should be used as t0 titres in the simulation. If not, all startnig titres are set to 0. Defaults to TRUE
 #' @param addNoise boolean value indicating whether or not observation error noise should be added to the simulation. Defaults to TRUE
 #' @param plotSerology boolean value indicating whether or not the FluScape data and simulation data should be plotted. Defaults to FALSE.
-#' @param noiseParams vector of parameters to be passed to \code\link{add_noise}}
+#' @param noiseParams vector of parameters to be passed to \code{\link{add_noise}}
 #' @return a dataframe of a similar format to the FluScape data frame.
 #' @seealso \code{\link{overall_simulation}}
 #' @export

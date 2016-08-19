@@ -33,6 +33,8 @@ fluscape_simulation(fluscape_data, n = NULL, fluscape_strains, mu_pars,
 \item{addNoise}{boolean value indicating whether or not observation error noise should be added to the simulation. Defaults to TRUE}
 
 \item{plotSerology}{boolean value indicating whether or not the FluScape data and simulation data should be plotted. Defaults to FALSE.}
+
+\item{noiseParams}{vector of parameters to be passed to \code{\link{add_noise}}}
 }
 \value{
 a dataframe of a similar format to the FluScape data frame.

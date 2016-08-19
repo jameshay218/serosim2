@@ -17,6 +17,8 @@ individual_simulation(infection_times, y0s, processParams, times,
 
 \item{strain_names}{a vector of strain names for data labels}
 
+\item{PROCESS_FUNCTION}{pointer to a function to calculate the data at the given time points. The function should take the following arguments: "infection_times" - a vector of times of infection with each strain; "y0" - a vector of initial values for each strain; processParams - as above; t - vector of times. This function should return a matrix of serological values matching the simulation data type. The first column should be time in days, and each subsequent column should be the measurement for each strain of interest on that day. See \code{\link{multiple_strains}} for an example (and default).}
+
 \item{y0}{vector of baseline values. eg. if three pathogens are being tested, this should be a vector of three values.}
 }
 \value{

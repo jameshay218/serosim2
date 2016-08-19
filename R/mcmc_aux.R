@@ -82,3 +82,5 @@ scaletuning <- function(step, popt,pcur){
     if(step > 1) step <- 1
     return(step)
 }
+
+

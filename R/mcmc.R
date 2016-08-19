@@ -1,22 +1,12 @@
-#' Run MCMC code
-#'
-#' runs the MCMC chain on the fluscape model
-#' @param placeholder asgfa
 #' @export
 run_metropolis_MCMC <- function(all_data,
-                                times,
-                                mcmcPars=c("iterations"=1000,"popt"=0.44,"opt_freq"=50,"thin"=1,"burnin"=100,"adaptive_period"=100,"save_block"=500,"tuning"=100,"N_pop_start"=50),
-                                filename,
-                                pop_fixed,
-                                ind_fixed,
-                                all_pop_pars,
-                                all_ind_pars,
-                                ...
-                                ){
-    #setwd("~/Documents/Fluscape/serosim2/chains")
-    #'###########################################################################
-    ## MCMC parameter extraction
-    #'###########################################################################
+                              times,
+                              mcmcPars=c("iterations"=1000,"popt"=0.44,"opt_freq"=50,"thin"=1,"burnin"=100,"adaptive_period"=100,"save_block"=500,"tuning"=100,"N_pop_start"=50),
+                              filename,
+                              pop_fixed,
+                              ind_fixed,
+                              all_pop_pars,
+                              all_ind_pars){
     iterations <- mcmcPars["iterations"]
     tuning <- mcmcPars["tuning"]
     popt <- mcmcPars["popt"]
@@ -27,19 +17,21 @@ run_metropolis_MCMC <- function(all_data,
     save_block <- mcmcPars["save_block"]
     N_pop_start <- mcmcPars["N_pop_start"]
     non_tuning_pop <- max(N_pop_start - burnin,0)
-    
+############################################################################
+    ## MCMC parameter extraction
+    ############################################################################ 
     TUNING_ERROR<- 0.1
 
     if(tuning > adaptive_period) tuning <- adaptive_period
 
     tmax <- max(times)
     print("MCMC paramters extracted")
-    #'###########################################################################
+    ############################################################################
 
 
-    #'###########################################################################
+    ############################################################################
     ## Also need to monitor population parameters
-    #'###########################################################################
+    ############################################################################
     pop_step <- 1 # population parameter proposal step size
     pop_pars <- c("mu_mu"=runif(1,1,8),"mu_sigma"=runif(1,1,5),
                   "error_sigma"=5,"S"=0.79,"EA"=0.2,
@@ -70,14 +62,14 @@ run_metropolis_MCMC <- function(all_data,
                                   "step_scale"=pop_step,"save_chain"=empty_save_pop_chain,"opt_chain"=empty_pop_chain,
                                   "accepted"=0,"iter"=0,"curr_lik"=0,"chain_i"=1,"opt_i"=1)
     print("Pop parameters set up")
-    #'###########################################################################
+    ############################################################################
 
     
     likelihood_ind <- make_likelihood(NULL,NULL, all_pop_pars, all_data[[1]],times)
     
-    #'###########################################################################
+    ############################################################################
     ## Each individual needs to be monitored
-    #'###########################################################################
+    ############################################################################
     n_individuals <- length(all_data)
 
     ## Empty matrices to save MCMC steps for each individual
@@ -131,12 +123,12 @@ run_metropolis_MCMC <- function(all_data,
                                              "curr_lik"=ini_lik,"chain_i"=1,"opt_i"=1)
     }
     print("Individual parameters set up")
-    #'###########################################################################
+    ############################################################################
 
 
-    #'###########################################################################
+    ############################################################################
     #### Initial likelihood for pop parameters
-    #'###########################################################################
+    ############################################################################
     POP_PARAMETER_CONTROL$curr_lik <- pop_lik
     ## Set up initial csv file
     chain_colnames <- c("sampno",names(all_pop_pars),"lnlike")
@@ -147,7 +139,7 @@ run_metropolis_MCMC <- function(all_data,
     ## Write starting conditions to file
     write.table(tmp_table,file=mcmc_pop_filename,row.names=FALSE,col.names=TRUE,sep=",",append=FALSE)
     print("Initial population parameters saved")
-    #'###########################################################################
+    ############################################################################
 
 
 
@@ -162,42 +154,42 @@ run_metropolis_MCMC <- function(all_data,
 
 
     
-    #'###########################################################################
-    #'###########################################################################
+    ############################################################################
+    ############################################################################
     ## ACTUAL CHAIN NOW
-    #'###########################################################################
-    #'###########################################################################
+    ############################################################################
+    ############################################################################
     ## Go through chain
     proposed_ind_liks <- numeric(n_individuals)
     print("Starting MCMC chain....")
     for (i in 1:(iterations+adaptive_period+burnin)){
         pop_lik <- 0
         
-        #'###########################################################################
+        ############################################################################
         ## INDIVIDUAL UPDATES
-        #'###########################################################################
+        ############################################################################
         ## Update for each individual
         for(j in 1:n_individuals){
             chain_i <- ALL_INDIVIDUALS_CONTROL[[j]]$chain_i
             opt_i <- ALL_INDIVIDUALS_CONTROL[[j]]$opt_i
             ALL_INDIVIDUALS_CONTROL[[j]]$iter <- ALL_INDIVIDUALS_CONTROL[[j]]$iter + 1
             
-            #' #####################################################
+            ######################################################
             ## MULTIVARIATE NORMAL PROPOSAL
-            #' #####################################################
+            ######################################################
             proposal <- mvr_proposal(ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$cov,ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,ind_fixed)
 
-            #' #####################################################
+            ######################################################
             ## Check that proposals are within allowable range
             if(ind_prior(proposal,tmax) > -0.5){
-                #' #####################################################
+                ######################################################
                 ## LIKELIHOOD CALCULATION FOR THIS INDIVIDUAL
-                #' #####################################################
+                ######################################################
                 lnlike <- proposed_ind_liks[j] <- likelihood_ind(proposal, ALL_INDIVIDUALS_CONTROL[[j]]$y0s, POP_PARAMETER_CONTROL$pars,all_data[[j]])
                 log_prob <- min(lnlike - ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik,0)
-                #' #####################################################
+                ######################################################
 
-                #' #####################################################
+                ######################################################
                 ## Check for acceptance. If better, or if worse and proportional to how worse accept the move
                 if(log(runif(1)) < log_prob){
                     ALL_INDIVIDUALS_CONTROL[[j]]$pars <- proposal
@@ -212,9 +204,9 @@ run_metropolis_MCMC <- function(all_data,
                     #ALL_INDIVIDUALS_CONTROL[[j]]$step_scale <- scaletuning(ALL_INDIVIDUALS_CONTROL[[j]]$step_scale,popt,pcur)
                 }
             }
-            #' #################################################
+            ##################################################
             ## ADAPTIVE PERIOD
-            #' #################################################
+            ##################################################
             ## If within adaptive period, record chain more regularly for adaptation
             if(i < (adaptive_period+burnin) && i > burnin){
                 ALL_INDIVIDUALS_CONTROL[[j]]$opt_chain[opt_i,] <- c(i,ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
@@ -227,16 +219,16 @@ run_metropolis_MCMC <- function(all_data,
                     ALL_INDIVIDUALS_CONTROL[[j]]$cov <- covMat
                 }
             }
-            #' #################################################
+            ##################################################
 
             ## Add to overall population likelihood
             pop_lik <- pop_lik + ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik
-            #' #####################################################
+            ######################################################
             
 
-            #' #####################################################
+            ######################################################
             ## If this iteration is meant to be recorded, save it to the MCMC chain
-            #' #####################################################
+            ######################################################
             if(i %% thin == 0){
                 ALL_INDIVIDUALS_CONTROL[[j]]$save_chain[chain_i,] <- c(i,ALL_INDIVIDUALS_CONTROL[[j]]$pars, ALL_INDIVIDUALS_CONTROL[[j]]$curr_lik)
                 ALL_INDIVIDUALS_CONTROL[[j]]$chain_i <- ALL_INDIVIDUALS_CONTROL[[j]]$chain_i + 1
@@ -250,9 +242,9 @@ run_metropolis_MCMC <- function(all_data,
         POP_PARAMETER_CONTROL$curr_lik <- pop_lik
         if(i%%save_block == 0) print(i)        
 
-        #'###########################################################################
+        ############################################################################
         ## POPULATION UPDATES
-        #'###########################################################################
+        ############################################################################
         ## If after the point of population updates
         if(i > N_pop_start){
             POP_PARAMETER_CONTROL$iter <- POP_PARAMETER_CONTROL$iter + 1
@@ -305,9 +297,9 @@ run_metropolis_MCMC <- function(all_data,
                     POP_PARAMETER_CONTROL$cov <- covMat
                 }
             }
-            #' #####################################################
+            ######################################################
             ## If this iteration is meant to be recorded, save it to the MCMC chain
-            #' #####################################################
+            ######################################################
             if(i %% thin == 0){
                 POP_PARAMETER_CONTROL$save_chain[chain_i,] <- c(i,POP_PARAMETER_CONTROL$pars, POP_PARAMETER_CONTROL$curr_lik)
                 POP_PARAMETER_CONTROL$chain_i <- POP_PARAMETER_CONTROL$chain_i + 1
@@ -321,6 +313,3 @@ run_metropolis_MCMC <- function(all_data,
     }
     return(TRUE)
 }
-
-
-
