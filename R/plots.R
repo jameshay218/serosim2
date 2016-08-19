@@ -1,4 +1,3 @@
-
 #' Serological data plot
 #'
 #' Plots of provided  paired serological data in a nice way, including a histogram for both visits; a boxplot for both visits and a scatterplot of V1 vs. V2.

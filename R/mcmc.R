@@ -1,3 +1,7 @@
+#' Run MCMC code
+#'
+#' runs the MCMC chain on the fluscape model
+#' @param placeholder asgfa
 #' @export
 run_metropolis_MCMC <- function(all_data,
                                 times,
