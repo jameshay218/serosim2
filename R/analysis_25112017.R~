@@ -1,0 +1,46 @@
+setwd("~/net/home/serosim")
+source("scripts/run_script.R")
+source("scripts/run_real_fitting.R")
+source("scripts/GeneralUtility.r")
+library(Rcpp)
+library(coda)
+library(ggplot2)
+library(grid)
+library(plyr)
+library(gridExtra)
+library(MASS)
+library(serosim2)
+
+## Install the necessary packages from Rich's github
+                                        #devtools::install_github(c("gaborcsardi/progress","dide-tools/context","richfitz/queuer","dide-tools/didewin"))
+## Submit credentials to didewin cluster
+options(didehpc.credentials = "~/.smbcredentials",
+        didehpc.cluster = "fi--didemrchnb")
+
+## Setup contexts
+src <- provisionr::package_sources(local = c("~/Documents/Fluscape/serosim2"))
+sources <- c("scripts/run_script.R","scripts/run_real_fitting.R")
+## Setup contexts
+context::context_log_start()
+root <- "contexts_test"         
+ctx <- context::context_save(packages=c("serosim2","coda",
+                                        "Rcpp","MASS","plyr","reshape2",
+                                        "ggplot2","grid","gridExtra",
+                                        "gtable","data.table"), path=root, sources=sources,package_sources=src)
+obj1 <- didehpc::queue_didehpc(ctx)
+
+
+all_params <- list("cr12"=0.1,"cr13"=0.1,"cr14"=0,"cr15"=0,"cr16"=0.1,
+                   "cr23"=0.1,"cr24"=0,"cr25"=0,"cr26"=0.1,
+                   "cr34"=0,"cr35"=0,"cr36"=0.1,
+                   "cr45"=0.1,"cr46"=0,
+                   "cr56"=0)
+                   
+                   
+all_params <- list("n"=250,"tstart"=0,"tmax"=1000, "n_samples"=2,"addNoise"=TRUE,
+                   "cr12"=0.3,"cr13"=0.1,"cr23"=0.4,
+                   "tp"=21,"m"=0.002,"a_propn"=0.7,
+                   "b_propn"=0.1,"c_propn"=0.6,"a_range"=c(200,600),"b_range"=c(100,400),
+                   "c_range"=c(300,800),"mu"=5,"mu_sigma"=1,"sigma"=5,"S"=0.79,"EA"=0.2,"max_titre"=13)
+
+nchain <- 3

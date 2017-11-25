@@ -492,6 +492,9 @@ fluscape_data_manipulation<- function(
     plotSerology=FALSE
     ){
 
+    t1_index <- 1
+    t2_index <- length(fluscape_strains)+1
+    
     v1_strains <- NULL
     v2_strains <- NULL
     
@@ -522,7 +525,6 @@ fluscape_data_manipulation<- function(
     end <- max(dat[,c("PART_SAMPLE_TIME.V1", "PART_SAMPLE_TIME.V2")])
     start <- 0
     
-
     tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.H3N2.2007.V1","PART_SAMPLE_TIME.V2","HI.H3N2.2007.V2")]
     tmpDat[,2] <- log(tmpDat[,2]/5,2)
     tmpDat[,4] <- log(tmpDat[,4]/5,2)
@@ -544,7 +546,7 @@ fluscape_data_manipulation<- function(
     p3 <- plot_serology(tmpDat ,"H1N1.2009",plotSerology)
     colnames(dat) <- c("t1",v1_strains,"t2",v2_strains)
 
-    for(i in c(2:4,6:8)){
+    for(i in c(2:t2_index,(t2_index+2):ncol(dat))){
         dat[dat[,i]==0,i] <- 5
         dat[,i] <- log(dat[,i]/5,2)
     }
@@ -553,16 +555,16 @@ fluscape_data_manipulation<- function(
 }
     
 #' @export
-generate_starting_ind_pars <- function(data,pop_pars,tmax,fluscapeY0=FALSE){
+generate_starting_ind_pars <- function(data,pop_pars,tmax,fluscapeY0=FALSE,nstrains=3){
     all_pars <- NULL
     mu <- pop_pars["mu_mu"]
     mu_sigma <- pop_pars["mu_sigma"]
     
     for(i in 1:length(data)){
         all_pars[[i]] <- list()
-        all_pars[[i]]$pars <- c("mu_i"=rnorm(1,mu,mu_sigma),"tis"=as.integer(runif(3,0,tmax)))
-        all_pars[[i]]$y0s <- rep(0,3)        
-        if(fluscapeY0) all_pars[[i]]$y0s <- data[[i]][1,2:4]
+        all_pars[[i]]$pars <- c("mu_i"=rnorm(1,mu,mu_sigma),"tis"=as.integer(runif(nstrains,0,tmax)))
+        all_pars[[i]]$y0s <- rep(0,nstrains)        
+        if(fluscapeY0) all_pars[[i]]$y0s <- data[[i]][1,2:(nstrains+1)]
     }
     return(all_pars)
 }

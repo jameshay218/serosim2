@@ -7,6 +7,33 @@
 using namespace std;
 using namespace Rcpp;
 
+//' Calculate likelihood
+//'
+//' Calculates the likelihood of a given set of observed titres given predicted titres. Based on truncated discritised normal.
+//' @param expected NumericVector, as returned by \code{\link{infection_model_indiv}}
+//' @param data NumericVector, the vector of observed titres
+//' @param theta NumericVector, the vector of named model parameters, requiring MAX_TITRE and error
+//' @return a single log likelihood
+//' @export
+//[[Rcpp::export]]
+double likelihood_titre(NumericVector expected, NumericVector data, double error, int MAX_TITRE){
+  int n = expected.size();
+  double lnlike = 0;
+  for(int i=0; i < n; ++i){
+    if(!NumericVector::is_na(data[i])){
+      if(data[i] > MAX_TITRE){
+	lnlike += R::pnorm(MAX_TITRE, expected[i], error,0,1);
+      } else if(data[i] <= 0){
+	lnlike += R::pnorm(1, expected[i], error,1,1);
+      } else {
+	lnlike += log(R::pnorm(data[i]+1, expected[i],error, 1,0) - 
+		      R::pnorm(data[i], expected[i], error,1,0));
+      }
+    }
+  }
+  return(lnlike);
+}
+
 //[[Rcpp::export]]
 NumericVector vector_sort(NumericVector x){
   NumericVector y = clone(x);
@@ -170,22 +197,22 @@ double posterior_1(
   y0s = y0s[indices];
 
   for(int i = 0; i < ti_pars.size(); ++i){
-    mus = cr_pars(i,_)*mu;
-    mus = mus[indices];
-    tps = tp_pars(i,_);
-    tps = tps[indices];
-    ms = m_pars(i,_);
-    ms = ms[indices];
-    y0 = y0s[i];
-    y(_,i+1) = individual_sim(mus,tps,ms, new_ti,y0, lower_bound,data(_,0));
-    
+      mus = cr_pars(i,_)*mu;
+      mus = mus[indices];
+      tps = tp_pars(i,_);
+      tps = tps[indices];
+      ms = m_pars(i,_);
+      ms = ms[indices];
+      y0 = y0s[i];
+      y(_,i+1) = individual_sim(mus,tps,ms, new_ti,y0, lower_bound,data(_,0));
+      lik += likelihood_titre(y(_,i+1),data(_,i+1),S,EA);
     /* ================================
        HERE TO CHANGE ERROR FUNCTION
        ================================ */
-    for(int j = 0; j < y.nrow();++j){
+    /*for(int j = 0; j < y.nrow();++j){
       lik += log(obs_error(data(j,i+1),floor(y(j,i+1)),S,EA));
       //lik += R::dnorm(data(j,i+1),y(j,i+1),pop_sigma,true);
-    }
+      }*/
   }
 
   // ALL MIXED EFFECTS
@@ -319,6 +346,7 @@ double posterior_3(
 }
 
 
+
 // Version 1 - only mu is mixed effects, rest is fixed
 //[[Rcpp::export]]
 double posterior_4(
@@ -368,18 +396,174 @@ double posterior_4(
     /* ================================
        HERE TO CHANGE ERROR FUNCTION
        ================================ */
-    for(int j = 0; j < y.nrow();++j){
+    lik += likelihood_titre(y(_,i+1),data(_,i+1),S,EA);
+    /*for(int j = 0; j < y.nrow();++j){
       lik += log(obs_error(data(j,i+1),floor(y(j,i+1)),S,EA));
       //lik += R::dnorm(data(j,i+1),y(j,i+1),pop_sigma,true);
-    }
+      }
+    */
   }
 
   // ALL MIXED EFFECTS
   lik += R::dnorm(mu, mu_pop,mu_pop_sigma,true);
-  
   for(int i = 0; i < (y.ncol()-1);++i){
     lik += log(obs_error(data(0,i+1),floor(y0s[i]),S,EA));
   }
   
   return(lik);
 }
+
+
+
+
+//[[Rcpp::export]]
+NumericVector individual_sim_NEW(
+				 NumericVector mu_pars, 
+				 double tp, 
+				 double m, 
+				 NumericVector ti_pars, 
+				 double  y0b,
+				 double lower_titre_bound, 
+				 NumericVector times
+				 ){
+  double y0 =  y0b;
+  double final_t, t_i, mu, tmp, max_t, tmp2;
+  NumericVector::iterator t = times.begin();
+  NumericVector Y(times.size(), y0);
+
+  int j = 0;
+  int no_infections = ti_pars.size();
+  max_t = times[times.size()-1];
+  
+  for(int i = 1; i <= no_infections; ++i){
+    t_i = ti_pars[i-1];
+    mu = mu_pars[i-1];
+    if(t_i >= 0){    
+      while(i < no_infections & mu_pars[i] == 0.0){
+	i++;
+      }
+      
+      if(i == no_infections){
+	final_t = max_t;
+      }
+      else {
+	final_t = ti_pars[i];
+      }
+   
+      while(t != times.end() && *t <= final_t){
+	tmp = 0;
+	if(*t <= t_i) tmp = y0;
+	else if(*t > t_i && *t <= (t_i + tp)) tmp = (mu/tp)*(*t) - (mu/tp)*(t_i) + y0;
+	else tmp = -m*((*t)) + m*(t_i + tp) + mu + y0;
+	Y[j] = tmp;
+      
+	if(Y[j] < lower_titre_bound) Y[j] = lower_titre_bound;
+	++t;
+	++j;
+      }
+    
+      if(i < no_infections){
+	tmp2 = ti_pars[i];
+	if(tmp2 <= t_i) y0 = y0;
+	else if (tmp2 <= t_i + tp) y0 = (mu/tp)*tmp2 - (mu/tp)*t_i + y0;
+	else y0 = m*(t_i + tp - tmp2) + mu + y0;
+      }
+   
+      if(y0 < lower_titre_bound){
+	y0 = lower_titre_bound;
+      }
+    }
+  }
+  return Y;
+}
+  
+  
+
+
+// Version 1 - only mu is mixed effects, rest is fixed
+//[[Rcpp::export]]
+double posterior_NEW(
+		     NumericVector ti_pars, 
+		     NumericVector y0s, 
+		     double mu,
+		     NumericMatrix cr_pars, 
+		     double tp, 
+		     double m, 
+		     double max_titre,
+		     double sigma,
+		     double mu_pop,
+		     double mu_pop_sigma,
+		     NumericMatrix data
+		     ){
+  double lower_bound = 0;
+  double y0;
+  double lik = 0;
+  NumericMatrix y(data.nrow(), ti_pars.size()+1);
+  y(_,0) = data(_,0);
+  NumericVector new_ti = clone(ti_pars);
+
+  IntegerVector indices(ti_pars.size());
+  NumericVector mus(ti_pars.size());
+  NumericVector tps(ti_pars.size());
+  NumericVector ms(ti_pars.size());
+
+  new_ti = vector_sort(ti_pars);
+  indices = vector_order(ti_pars) - 1;
+  
+  y0s = y0s[indices];
+
+  for(int i = 0; i < ti_pars.size(); ++i){
+    mus = cr_pars(i,_)*mu;
+    mus = mus[indices];
+    y0 = y0s[i];
+    y(_,i+1) = individual_sim_NEW(mus,tp,m, new_ti,y0, lower_bound,data(_,0));
+    lik += likelihood_titre(y(_,i+1),data(_,i+1),sigma,max_titre);
+  }
+
+  // ALL MIXED EFFECTS
+  lik += R::dnorm(mu, mu_pop,mu_pop_sigma,true);
+  return(lik);
+}
+
+//[[Rcpp::export]]
+NumericMatrix model_NEW(
+			NumericVector ti_pars, 
+			NumericVector y0s, 
+			double mu,
+			NumericMatrix cr_pars, 
+			double tp, 
+			double m, 
+			double max_titre,
+			double sigma,
+			double mu_pop,
+			double mu_pop_sigma,
+			NumericVector ts
+			){
+  double lower_bound = 0;
+  double y0;
+  double lik = 0;
+  NumericMatrix y(ts.size(), ti_pars.size()+1);
+  y(_,0) = ts;
+  NumericVector new_ti = clone(ti_pars);
+
+  IntegerVector indices(ti_pars.size());
+  NumericVector mus(ti_pars.size());
+  NumericVector tps(ti_pars.size());
+  NumericVector ms(ti_pars.size());
+
+  new_ti = vector_sort(ti_pars);
+  indices = vector_order(ti_pars) - 1;
+
+  y0s = y0s[indices];
+
+  for(int i = 0; i < ti_pars.size(); ++i){
+    mus = cr_pars(i,_)*mu;
+    mus = mus[indices];
+    y0 = y0s[i];
+    y(_,i+1) = individual_sim_NEW(mus,tp,m, new_ti,y0, lower_bound,ts);
+  }
+
+  return(y);
+}
+
+
