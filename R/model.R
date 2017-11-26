@@ -116,6 +116,46 @@ add_noise_func<- function(x, params){
     return(i-1)
 }
 
+
+#' Adds observation error - normal likelihood
+#'
+#' Adds random noise to a given value, based on the truncated, discritised normal distribution.
+#' @param x the value to be perturbed
+#' @param params vector of parameters for the observation error matrix. params[1] should be the value for standard deviation, and params[2]should be the maximum observable titre.
+#' @return returns the given value with added observation error
+#' @export
+#' @examples
+#' add_noise_func(5, c(1,8))
+add_noise_func_dnorm <- function(x, params){
+    error <- params[1]
+    MAX_TITRE <- params[2]
+    j <- runif(1,0,1)
+    obs_error <- NULL
+    if(x > MAX_TITRE) x <- MAX_TITRE
+    for(i in 1:(MAX_TITRE+1)){
+        titre <- i - 1
+        if(titre <= 0 & x <= 0){
+            obs_error[i] <- pnorm(1, x, error,1,0)
+        } else if(titre > MAX_TITRE && x > MAX_TITRE){
+            obs_error[i] <- pnorm(MAX_TITRE, x, error, 0, 0)
+        } else {
+            obs_error[i] <- pnorm(titre+1, x,error, 1,0) - 
+                pnorm(titre, x, error,1,0)
+        }
+    }
+    
+    cum_obs_error <- numeric(length(obs_error))
+    cum_obs_error[1] <- obs_error[1]
+    for(i in 2:length(cum_obs_error)){
+        cum_obs_error[i] <- cum_obs_error[i-1] + obs_error[i]
+    }
+    i <- 1
+    while(cum_obs_error[i] < j){
+        i <- i + 1
+    }
+    return(i-1)
+}
+
 #' Checks that simulation paramters are error free
 #'
 #' @export
@@ -365,7 +405,7 @@ individual_simulation <- function(
     sample_times,
     PROCESS_FUNCTION = multiple_strains
     ){
-      
+    
     #' Go through each infection and generate a trajectory
     dat <- PROCESS_FUNCTION(infection_times, y0s, processParams, times)
     
@@ -375,9 +415,59 @@ individual_simulation <- function(
     dat <- dat[dat[,1] %in% sample_times,]
     dat <- as.data.frame(dat)
     colnames(dat) <- c("time",strain_names)
-   
+    
     return(dat)
 }
+
+#' @export
+#'
+#' New model version
+new_model_sim <- function(tis, y0s, pop_pars, times, ...){
+    cr_matrix <- matrix(1,ncol=length(y0s),nrow=length(y0s))
+    ## Infection 1
+    cr_matrix[1,2] <- cr_matrix[2,1] <- pop_pars["cr12"]
+    cr_matrix[1,3] <- cr_matrix[3,1] <- pop_pars["cr13"]
+    cr_matrix[1,4] <- cr_matrix[4,1] <- pop_pars["cr14"]
+    cr_matrix[1,5] <- cr_matrix[5,1] <- pop_pars["cr15"]
+    cr_matrix[1,6] <- cr_matrix[6,1] <- pop_pars["cr16"]
+
+    ## Infection 2
+    cr_matrix[2,3] <- cr_matrix[3,2] <- pop_pars["cr23"]
+    cr_matrix[2,4] <- cr_matrix[4,2] <- pop_pars["cr24"]
+    cr_matrix[2,5] <- cr_matrix[5,2] <- pop_pars["cr25"]
+    cr_matrix[2,6] <- cr_matrix[6,2] <- pop_pars["cr26"]
+
+    ## Infection 3
+    cr_matrix[3,4] <- cr_matrix[4,3] <- pop_pars["cr34"]
+    cr_matrix[3,5] <- cr_matrix[5,3] <- pop_pars["cr35"]
+    cr_matrix[3,6] <- cr_matrix[6,3] <- pop_pars["cr36"]
+
+    ## Infection 4
+    cr_matrix[4,5] <- cr_matrix[5,4] <- pop_pars["cr45"]
+    cr_matrix[4,6] <- cr_matrix[6,4] <- pop_pars["cr46"]
+    
+    ## Infection 5
+    cr_matrix[5,6] <- cr_matrix[6,5] <- pop_pars["cr56"]
+
+
+    ## Other pop pars
+    m <- pop_pars["m"]
+    tp <- pop_pars["tp"]
+    mu <- pop_pars["mu_mu"]
+    mu_sigma <- pop_pars["mu_sigma"]
+
+    ## Error pars
+    max_titre <- pop_pars["max_titre"]
+    sigma <- pop_pars["error_sigma"]
+    
+    ## Individual pars
+    mu_ind <- pop_pars["mu_i"]
+    #tis <- ind_pars[c("tis1","tis2","tis3","tis4","tis5","tis6")]
+
+    return(model_NEW(tis, y0s, mu_ind, cr_matrix, tp, m, max_titre, sigma, mu, mu_sigma, times))
+}
+
+
 
 #' Wrapper for the model
 #'
@@ -529,21 +619,21 @@ fluscape_data_manipulation<- function(
     tmpDat[,2] <- log(tmpDat[,2]/5,2)
     tmpDat[,4] <- log(tmpDat[,4]/5,2)
 
-    p1 <- plot_serology(tmpDat ,"H3N2.2007",plotSerology)
+    #p1 <- plot_serology(tmpDat ,"H3N2.2007",plotSerology)
 
 
     tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.CKH9N2.2008.V1","PART_SAMPLE_TIME.V2","HI.CKH9N2.2008.V2")]
     tmpDat[,2] <- log(tmpDat[,2]/5,2)
     tmpDat[,4] <- log(tmpDat[,4]/5,2)
 
-    p2 <- plot_serology(tmpDat ,"H9N2.2008",plotSerology)
+    #p2 <- plot_serology(tmpDat ,"H9N2.2008",plotSerology)
 
 
     tmpDat <- dat[,c("PART_SAMPLE_TIME.V1","HI.H1N1.2009.PDM.V1","PART_SAMPLE_TIME.V2","HI.H1N1.2009.PDM.V2")]
     tmpDat[,2] <- log(tmpDat[,2]/5,2)
     tmpDat[,4] <- log(tmpDat[,4]/5,2)
 
-    p3 <- plot_serology(tmpDat ,"H1N1.2009",plotSerology)
+    #p3 <- plot_serology(tmpDat ,"H1N1.2009",plotSerology)
     colnames(dat) <- c("t1",v1_strains,"t2",v2_strains)
 
     for(i in c(2:t2_index,(t2_index+2):ncol(dat))){
