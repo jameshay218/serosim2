@@ -174,65 +174,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// individual_sim_NEW
-NumericVector individual_sim_NEW(NumericVector mu_pars, double tp, double m, NumericVector ti_pars, double y0b, double lower_titre_bound, NumericVector times);
-RcppExport SEXP _serosim2_individual_sim_NEW(SEXP mu_parsSEXP, SEXP tpSEXP, SEXP mSEXP, SEXP ti_parsSEXP, SEXP y0bSEXP, SEXP lower_titre_boundSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type mu_pars(mu_parsSEXP);
-    Rcpp::traits::input_parameter< double >::type tp(tpSEXP);
-    Rcpp::traits::input_parameter< double >::type m(mSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
-    Rcpp::traits::input_parameter< double >::type y0b(y0bSEXP);
-    Rcpp::traits::input_parameter< double >::type lower_titre_bound(lower_titre_boundSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type times(timesSEXP);
-    rcpp_result_gen = Rcpp::wrap(individual_sim_NEW(mu_pars, tp, m, ti_pars, y0b, lower_titre_bound, times));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_NEW
-double posterior_NEW(NumericVector ti_pars, NumericVector y0s, double mu, NumericMatrix cr_pars, double tp, double m, double max_titre, double sigma, double mu_pop, double mu_pop_sigma, NumericMatrix data);
-RcppExport SEXP _serosim2_posterior_NEW(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP muSEXP, SEXP cr_parsSEXP, SEXP tpSEXP, SEXP mSEXP, SEXP max_titreSEXP, SEXP sigmaSEXP, SEXP mu_popSEXP, SEXP mu_pop_sigmaSEXP, SEXP dataSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
-    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type cr_pars(cr_parsSEXP);
-    Rcpp::traits::input_parameter< double >::type tp(tpSEXP);
-    Rcpp::traits::input_parameter< double >::type m(mSEXP);
-    Rcpp::traits::input_parameter< double >::type max_titre(max_titreSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type mu_pop(mu_popSEXP);
-    Rcpp::traits::input_parameter< double >::type mu_pop_sigma(mu_pop_sigmaSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_NEW(ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, data));
-    return rcpp_result_gen;
-END_RCPP
-}
-// model_NEW
-NumericMatrix model_NEW(NumericVector ti_pars, NumericVector y0s, double mu, NumericMatrix cr_pars, double tp, double m, double max_titre, double sigma, double mu_pop, double mu_pop_sigma, NumericVector ts);
-RcppExport SEXP _serosim2_model_NEW(SEXP ti_parsSEXP, SEXP y0sSEXP, SEXP muSEXP, SEXP cr_parsSEXP, SEXP tpSEXP, SEXP mSEXP, SEXP max_titreSEXP, SEXP sigmaSEXP, SEXP mu_popSEXP, SEXP mu_pop_sigmaSEXP, SEXP tsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type ti_pars(ti_parsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type y0s(y0sSEXP);
-    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type cr_pars(cr_parsSEXP);
-    Rcpp::traits::input_parameter< double >::type tp(tpSEXP);
-    Rcpp::traits::input_parameter< double >::type m(mSEXP);
-    Rcpp::traits::input_parameter< double >::type max_titre(max_titreSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type mu_pop(mu_popSEXP);
-    Rcpp::traits::input_parameter< double >::type mu_pop_sigma(mu_pop_sigmaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type ts(tsSEXP);
-    rcpp_result_gen = Rcpp::wrap(model_NEW(ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, ts));
-    return rcpp_result_gen;
-END_RCPP
-}
 // toUnitScale
 double toUnitScale(double x, double min, double max);
 RcppExport SEXP _serosim2_toUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {
@@ -258,9 +199,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_serosim2_posterior_2", (DL_FUNC) &_serosim2_posterior_2, 12},
     {"_serosim2_posterior_3", (DL_FUNC) &_serosim2_posterior_3, 14},
     {"_serosim2_posterior_4", (DL_FUNC) &_serosim2_posterior_4, 10},
-    {"_serosim2_individual_sim_NEW", (DL_FUNC) &_serosim2_individual_sim_NEW, 7},
-    {"_serosim2_posterior_NEW", (DL_FUNC) &_serosim2_posterior_NEW, 11},
-    {"_serosim2_model_NEW", (DL_FUNC) &_serosim2_model_NEW, 11},
     {"_serosim2_toUnitScale", (DL_FUNC) &_serosim2_toUnitScale, 3},
     {NULL, NULL, 0}
 };

@@ -22,12 +22,12 @@ mvr_proposal <- function(pars, cov, step,fixed,y0s=NULL){
 
     if(!is.null(y0s)){
         proposed <- c(proposed, y0s)
-        y0_indices <- (length(pars)+1):length(proposed)
+        y0_indices <- c(length(proposed)-2,length(proposed)-1,length(proposed))
         indices <- c(indices, y0_indices)
     }
-    ##proposed[indices]  <- pars[indices] + step*mvrnorm(n=1,mu=rep(0,length(pars[indices])),cov[indices,indices])
-    proposed[indices] <- mvrnorm(n=1,mu=proposed[indices],Sigma=step*(5.6644/length(fixed))*cov[indices,indices])
-    
+    #proposed[indices]  <- pars[indices] + step*mvrnorm(n=1,mu=rep(0,length(pars[indices])),cov[indices,indices])
+    proposed[indices] <- mvrnorm(n=1,mu=proposed[indices],Sigma=step*cov[indices,indices])
+
     if(!is.null(y0s)){
         y0s <- proposed[y0_indices]
         proposed <- proposed[!(seq_along(proposed) %in% y0_indices)]
@@ -44,37 +44,11 @@ y0_proposal <- function(y0s){
 }
 
 #' @export
-ind_prior1 <- function(pars, tmin, tmax, ind_fixed, y0s=NULL){
-    if(any(pars[!ind_fixed] < 0)) return(-1)
-    if(any(pars[2:length(pars)] < tmin & pars[2:length(pars)] >= 0)) return(-1)
-    ## For each infection, see if another infection happened within
-    ## 21 days. If so, reject
-
-    for(i in 2:(length(pars)-1)){
-        if(pars[i] != tmax + 2 && pars[i] >= 0){
-            for(j in (i+1):length(pars)){
-                if(abs(pars[i] - pars[j]) <= 21) return(-1)
-            }
-        }
-    }
-    ## If any of the 6 infection times strayed above 2000
-    if(any(pars[2:length(pars)] > 2000)) return(-1)
-    if(pars[1] > 50) return(-1)
-    if(!is.null(y0s)){
-        if(any(y0s < 0)) return(-1)
-    }
-    return(1)
-}
-
-#' @export
 ind_prior <- function(pars, tmax, y0s=NULL){
     if(any(pars < 0)) return(-1)
-    
     if(pars[2] != tmax+2 && abs(pars[2] - pars[3]) <= 21) return(-1)
     if(pars[3] != tmax+2 && abs(pars[3] - pars[4]) <= 21) return(-1)
     if(pars[4] != tmax+2 && abs(pars[2] - pars[4]) <= 21) return(-1)
-
-
     if(any(pars[2:4] > 2000)) return(-1)
     if(pars[1] > 50) return(-1)
     if(!is.null(y0s)){
@@ -83,70 +57,17 @@ ind_prior <- function(pars, tmax, y0s=NULL){
     return(1)
 }
 
-
-
 #' @export
 pop_prior <- function(pars){
     if(any(pars < 0)) return(-1)
-    if(any(pars[7:21] > 1)) return(-1)
     if(any(pars > 100)) return(-1)
+    if(any(pars[6:8] > 1)) return(-1)
     return(1)
 }
 
 
-
-
 #' @export
-make_likelihood <- function(ind_pars, y0s, pop_pars, data, times, oddLikelihood=FALSE, NEW_MODEL=TRUE){
-    if(NEW_MODEL){
-        print("New model")
-        cr_matrix <- matrix(1,ncol=length(y0s),nrow=length(y0s))
-        f <- function(ind_pars, y0s, pop_pars, data){
-            ## Infection 1
-            cr_matrix[1,2] <- cr_matrix[2,1] <- pop_pars["cr12"]
-            cr_matrix[1,3] <- cr_matrix[3,1] <- pop_pars["cr13"]
-            cr_matrix[1,4] <- cr_matrix[4,1] <- pop_pars["cr14"]
-            cr_matrix[1,5] <- cr_matrix[5,1] <- pop_pars["cr15"]
-            cr_matrix[1,6] <- cr_matrix[6,1] <- pop_pars["cr16"]
-
-            ## Infection 2
-            cr_matrix[2,3] <- cr_matrix[3,2] <- pop_pars["cr23"]
-            cr_matrix[2,4] <- cr_matrix[4,2] <- pop_pars["cr24"]
-            cr_matrix[2,5] <- cr_matrix[5,2] <- pop_pars["cr25"]
-            cr_matrix[2,6] <- cr_matrix[6,2] <- pop_pars["cr26"]
-
-            ## Infection 3
-            cr_matrix[3,4] <- cr_matrix[4,3] <- pop_pars["cr34"]
-            cr_matrix[3,5] <- cr_matrix[5,3] <- pop_pars["cr35"]
-            cr_matrix[3,6] <- cr_matrix[6,3] <- pop_pars["cr36"]
-
-            ## Infection 4
-            cr_matrix[4,5] <- cr_matrix[5,4] <- pop_pars["cr45"]
-            cr_matrix[4,6] <- cr_matrix[6,4] <- pop_pars["cr46"]
-            
-            ## Infection 5
-            cr_matrix[5,6] <- cr_matrix[6,5] <- pop_pars["cr56"]
-
-
-            ## Other pop pars
-            m <- pop_pars["m"]
-            tp <- pop_pars["tp"]
-            mu <- pop_pars["mu_mu"]
-            mu_sigma <- pop_pars["mu_sigma"]
-
-            ## Error pars
-            max_titre <- pop_pars["max_titre"]
-            sigma <- pop_pars["error_sigma"]
-            
-            ## Individual pars
-            mu_ind <- ind_pars["mu_i"]
-            tis <- ind_pars[c("tis1","tis2","tis3","tis4","tis5","tis6")]
-
-            return(posterior_NEW(tis, y0s, mu_ind, cr_matrix, tp, m, max_titre, sigma, mu, mu_sigma, data))
-        }
-        return(f)
-    }
-    
+make_likelihood <- function(ind_pars, y0s, pop_pars, data, times, oddLikelihood=FALSE){
     if(!oddLikelihood){
         f <- function(ind_pars, y0s, pop_pars, data){
             ## Population parameters

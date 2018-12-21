@@ -49,18 +49,6 @@ posterior_4 <- function(ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, error_
     .Call('_serosim2_posterior_4', PACKAGE = 'serosim2', ti_pars, y0s, mu, cr_pars, tp_pars, m_pars, data, error_pars, mu_pop, mu_pop_sigma)
 }
 
-individual_sim_NEW <- function(mu_pars, tp, m, ti_pars, y0b, lower_titre_bound, times) {
-    .Call('_serosim2_individual_sim_NEW', PACKAGE = 'serosim2', mu_pars, tp, m, ti_pars, y0b, lower_titre_bound, times)
-}
-
-posterior_NEW <- function(ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, data) {
-    .Call('_serosim2_posterior_NEW', PACKAGE = 'serosim2', ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, data)
-}
-
-model_NEW <- function(ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, ts) {
-    .Call('_serosim2_model_NEW', PACKAGE = 'serosim2', ti_pars, y0s, mu, cr_pars, tp, m, max_titre, sigma, mu_pop, mu_pop_sigma, ts)
-}
-
 #' Converts to unit scale
 #'
 #' @param x the double to be converted
